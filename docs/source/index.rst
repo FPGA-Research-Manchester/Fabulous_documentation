@@ -25,11 +25,11 @@ Contents
 
 .. toctree::
 
-   Usage
+   usage
    Fabric RTL
    Fabric models generation
-   VHDL/Verilog to JSON/BLIF by Yosys
-   JSON to FASM by nextpnr
-   BLIF to FASM by VPR
-   Generate Bitstream
-   Generate simulation model
+   Yosys compilation
+   Nextpnr compilation
+   VPR compilation
+   Bitstream generation
+   Simulation model
