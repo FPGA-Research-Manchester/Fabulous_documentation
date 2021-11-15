@@ -2,9 +2,10 @@
 
 # -- Project information
 
-project = 'Lumache'
-copyright = '2021, Graziella'
-author = 'Graziella'
+# project = 'FABulous Dokumentation'
+project = 'FABulous Dokumentation'
+copyright = '2021, University of Manchester'
+author = 'Jing, Nguyen, Bea, Bardia, Dirk'
 
 release = '0.1'
 version = '0.1.0'
@@ -29,7 +30,10 @@ templates_path = ['_templates']
 
 # -- Options for HTML output
 
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'sphinx_materialdesign_theme'
+
+html_logo = 'figs/FAB_logo.png'
+
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
