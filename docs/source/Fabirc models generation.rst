@@ -1,4 +1,4 @@
-Fabirc models genertation
+Fabirc models generation
 =========================
 
 Create Yosys models
