@@ -11,7 +11,7 @@ python:
     - method: pip
       path: .
     - method: pip
-      path: -r docs/requirements.txt
+      path: docs/requirements.txt
    
    
 sphinx:
