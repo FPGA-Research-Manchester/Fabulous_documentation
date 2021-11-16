@@ -12,7 +12,7 @@ This guide describes everything you need to set up your system to develop for FA
 .. image:: https://www.dropbox.com/s/g6wrtom681nr7tb/fabulous_ecosystem.png?raw=1
     :width: 80%
 
-Check out the :doc:`usage` section for further information, including
+Check out the :doc:`Usage` section for further information, including
 how to :ref:`installation` the project.
 
 .. note::
