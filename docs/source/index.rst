@@ -24,8 +24,7 @@ Contents
 
 .. toctree::
 
-   usage
-   api
+   Usage
    Fabric RTL
    Fabric models generation
    Yosys compilation
