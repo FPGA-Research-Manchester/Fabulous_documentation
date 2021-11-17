@@ -1,2 +1,1 @@
 sphinx_materialdesign_theme
-graphviz
