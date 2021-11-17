@@ -9,11 +9,28 @@ toolchain release packages, deals with the bitstream generation and after fabric
 
 This guide describes everything you need to set up your system to develop for FABulous ecosystem.
 
+.. graphviz::
+
+     digraph fabulous_flow {
+              a [label="fabric_definition",URL="Fabric RTL.html", target="_top"];
+              b [label="Fabric ASIC Implementation"];
+              c [label="Test & Characterization"]
+              d [label="Model Validation"]
+              e [label="FPGA CAD tool parameterization"]
+              f [label="FPGA-to-bitstream compilation"]
+              g [label="Simulation & Emulation"]
+              a -> b -> c;
+              b -> d;
+              b -> g;
+              a -> e -> f -> g;
+              e -> d;
+                                     }
+
 .. image:: https://www.dropbox.com/s/g6wrtom681nr7tb/fabulous_ecosystem.png?raw=1
     :width: 80%
 
 Check out the :doc:`Usage` section for further information, including
-how to :ref:`installation` the project.
+how to :ref:`installation`.
 
 .. note::
 
