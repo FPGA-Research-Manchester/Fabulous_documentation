@@ -12,22 +12,29 @@ This guide describes everything you need to set up your system to develop for FA
 .. graphviz::
 
      digraph fabulous_flow {
-              a [label="fabric_definition",URL="Fabric RTL.html", target="_top"];
-              b [label="Fabric ASIC Implementation"];
-              c [label="Test & Characterization"];
-              d [label="Model Validation"];
-              e [label="FPGA CAD tool parameterization"];
-              f [label="FPGA-to-bitstream compilation"];
-              g [label="Simulation & Emulation"];
-              a -> b -> c;
-              b -> d;
-              b -> g;
-              b -> e [label="timing model",color="azure4"];
-              a -> e -> f -> g;
-              e -> d [color="azure4"];
-              { rank=same; b; e;}
-              { rank=same; c; g;}
-                                     }
+              rankdir="TB"
+              subgraph {
+               a [label="fabric_definition",URL="Fabric RTL.html", target="_top"];
+               b [label="Fabric ASIC Implementation"];
+               c [label="Test & Characterization"];
+               d [label="Model Validation"];
+               e [label="FPGA CAD tool parameterization"];
+               f [label="FPGA-to-bitstream compilation"];
+               g [label="Simulation & Emulation"]
+               a -> b -> c;
+               b -> d;
+               b -> g;
+               b -> e [label="timing model",color="azure4"];
+               a -> e -> f;
+               f -> g;
+               e -> d [color="azure4"];
+               d -> g [style="invis"];
+               { rank=same; b; e;}
+               { rank=same; d;}
+               { rank=same; c; f;}
+               { rank=max; g;}
+               }
+              }
 
 .. image:: https://www.dropbox.com/s/g6wrtom681nr7tb/fabulous_ecosystem.png?raw=1
     :width: 80%
