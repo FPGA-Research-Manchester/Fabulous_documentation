@@ -20,7 +20,7 @@ This guide describes everything you need to set up your system to develop for FA
     :width: 80%
 
 Check out the :doc:`Usage` section for further information, including
-how to :ref:`installation`.
+how to :ref:`setup`.
 
 .. note::
 

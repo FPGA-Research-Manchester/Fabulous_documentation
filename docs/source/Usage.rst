@@ -1,51 +1,76 @@
 Usage
 =====
+.. _setup:
 
 Prerequisites
 -------------
 
 The following packages need to be installed for generating fabric HDLs
 
-- ``Python 3.5 or later/``
-
-Install python dependancies
+:Fabulous repository:
 
 .. code-block:: console
 
-   pip3 install -r requirements.txt
+    git clone --recurse-submodules https://github.com/FPGA-Research-Manchester/FABulous
+
+:Python: 
+ version > 3.5
+
+:python dependencies:
+
+.. code-block:: console
+
+    pip3 install -r requirements.txt
 
 The following packages need to be installed for CAD toolchain
 
-- ``Yosys``
-  - latest version on Yosys git repository: https://github.com/YosysHQ/yosys.git
-- ``nextpnr-fabulous``
+:`Yosys <https://github.com/YosysHQ/yosys>`_:
+ version > 0.10
+
+
+.. note:: IN the following :term:`$FAB_ROOT` means the root directory of the Fabulous source code tree.
+
+:nextpnr-fabulous:
 
 .. code-block:: console
 
-   git clone --branch fabulous https://github.com/FPGA-Research-Manchester/nextpnr
-   cd nextpnr
-   cmake . -DARCH=fabulous
+   cd $FAB_ROOT/nextpnr
+   cmake . -DARCH=fabulous_v3
    make -j$(nproc)
    sudo make install
-
-.. _installation:
 
 Building Fabric
 ---------------
 
+Under 
+
 .. code-block:: console
 
-   cd fabric_generator
-   ./create_basic_files.sh
-   ./run_fab_flow.sh
+   cd $FAB_ROOT/fabric_generator
+   ./create_basic_files_v3.sh
+   ./run_fabv3_flow.sh
+
+After the fabulous flow runing correctly, the RTL files can be found under ``$FAB_ROOT/fabric_generator/verilog_output`` or ``$FAB_ROOT/fabric_generator/vhdl_output``.
 
 
 Generating Bitstream
 --------------------
 
+Nextpnr models can be found under ``$FAB_ROOT/fabric_generator/npnroutput``
+
+To run nextpnr compilation
+ 
 .. code-block:: console
 
-   cd ../nextpnr/fabulous/fab_arch/
-   ./fabulous_flow.sh sequential_16bit
-   python3 bit_gen.py -genBitstream sequential_16bit.fasm meta_data.txt sequential_16bit_output.bin
+   cd $FAB_ROOT/nextpnr/fabulous_v3/fab_arch/
+   ./fabulous_flow.sh <benchmark_name>
 
+Example:
+
+.. code-block:: console
+
+   ./fabulous_flow.sh sequential_16bit
+
+The output <benchmark_name>_output.bin can be used in further simulation.
+
+VPR models can be found under ``/vproutput``
