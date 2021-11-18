@@ -1,4 +1,7 @@
-Bitstream generation
-====================
-
 Generate Bitstream <-- Meta Data
+================================
+
+.. toctree::
+   :maxdepth: 1
+
+   Bitstream generation
