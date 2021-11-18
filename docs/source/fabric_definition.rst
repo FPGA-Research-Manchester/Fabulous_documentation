@@ -13,7 +13,7 @@ The following figure shows a small fabric, which we will model throughout this s
 * 2 DSP block supertiles 
 * 4 internal IO ports for coupling the fabric with a CPU
 
-.. figure:: figs/abstraqct_tile_view.png
+.. figure:: figs/abstraqct_tile_view.*
     :alt: FABulous example fabric
     :width: 33% 
     :align: center
