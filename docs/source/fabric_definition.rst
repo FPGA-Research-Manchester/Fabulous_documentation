@@ -28,7 +28,7 @@ The full model of a fabric is described by the following files:
 The following block provides a fabric.csv example. 
 
 .. code-block:: python
-   :emphasize-lines: 1,6,8,15,17,24
+   :emphasize-lines: 1,6,8,15,17,24,26
 
    FabricBegin      # explained in subsection Fabric layout
    NULL,  N_term,   N_term,   N_term,  N_term,  NULL
@@ -53,7 +53,10 @@ The following block provides a fabric.csv example.
    BEL,      LUT4c_frame_config_OQ.vhdl,  LA_
    ...
    MATRIX,   LUT4AB_switch_matrix.vhdl               
-   EndTILE                  
+   EndTILE        
+
+   TILE, DSP         # all other tiles folow the same sheme
+   ...   
 
 .. _fabric_csv:
 
@@ -135,13 +138,15 @@ The following figure shows the fabric.csv representation of our example fabric a
     :align: center
 
 .. code-block:: python
-   :emphasize-lines: 1,6
+   :emphasize-lines: 1,8
 
    FabricBegin      
    NULL,  N_term,   N_term,   N_term,  N_term,  NULL
    W_IO,  RegFile,  DSP_top,  LUT4AB,  LUT4AB,  CPU_IO
    W_IO,  RegFile,  DSP_bot,  LUT4AB,  LUT4AB,  CPU_IO
-   ...
+   W_IO,  RegFile,  DSP_top,  LUT4AB,  LUT4AB,  CPU_IO
+   W_IO,  RegFile,  DSP_bot,  LUT4AB,  LUT4AB,  CPU_IO
+   NULL,  S_term,   S_term,   S_term,  S_term,  NULL
    FabricEnd        
 
 * The fabric layout is encapsulated between the key words ``FabricBegin`` and ``FabricEnd``.
@@ -204,7 +209,7 @@ Each tile that is refered to in the :ref:`fabric_layout` requrires to specify th
 Wires
 ~~~~~
 
-Wires are defined as 5-tuples:
+Wires are defined by 5-tuples:
 
 ``direction``,  ``source_name``,  ``X-offset``,  ``Y-offset``,  ``destination_name``,  ``wires``
 
@@ -216,21 +221,64 @@ specifying:
   
   Jump wires are useful to model hierarchies, some sharing of multiplexers or tapping into routing paths, as shown in the examples below. 
   
-  In the VPR and Altera world, tiles separate between a connection switch matrix and the actual local wire switch matrix. The connection switch matrix is nothing else as a bank of multiplexers selecting from the local routing wires a pool of connection wires that can then be further routed to primitive pins (e.g, a LUT input). In FABulous, those connection wires would be modelled with a set of jump wires, which connect somehow the primitive input multiplexers.
+  In the VPR and Altera world, tiles separate between a connection switch matrix and the actual local wire switch matrix. The connection switch matrix is nothing else as a bank of multiplexers selecting from the local routing wires a pool of connection wires that can then be further routed to primitive pins (e.g, a LUT input). In FABulous, those connection wires would be modelled with a set of jump wires, which connect then somehow to the primitive input multiplexers.
   
   Older Xilinx architectures have a less hierarchical routing graph and local routing wires between the tiles connect drectly to the input multiplexers of the primitives. 
   
-  Xilinx Virtex-5 FPGAs provide diagonal routing wires (e.g., a Wire routing in north-east direction), a concept abbandoned in consecutive Xilinx FPGA families. FABulous can model diagonal routing by splitting a wire in its components (e.g., a north-east wire can be modeled by cascading a north wire and an east wire).
+  Xilinx Virtex-5 FPGAs provide diagonal routing wires (e.g., a wire routing in north-east direction), a concept abbandoned in consecutive Xilinx FPGA families. FABulous can model diagonal routing by splitting a wire in its components (e.g., a north-east wire can be modeled by cascading a north wire and an east wire).
   
 * ``source_name``, ``string``
 
   ``destination_name``, ``string``
 
   These are symbolic names for the ports used for the tile top wrapper and the switch matrix connections.
-  It is recomended to follow a semantic that expresses the direction, routing span (i.e. how many tiles far away) if it is a *begin* or *end* or other port.
-  For instance, a single wire in NORTH direction should use names like *N1Beg* to *N1End* or *N1b* to *N1e*
+  It is recomended to follow a semantic that expresses the direction, routing span (i.e. how many tiles far away the wire is spanning) if it is a *begin* or *end* or other port.
+  For instance, a single wire in NORTH direction should use names like *N1Beg* to *N1End* or *N1b* to *N1e*.
   
-  .. note::  The ``destination_name`` is refering to the port name used at the destination tile.
+  The destination name refers to two ports: a port on the target tile and an expected port on the destination tile. This reflects that wires route between tiles and that the begin and end ports of a tile connect to different wires.
+  However, while this works for tiles inside the fabric (like CLBs), the tiles at the border do usually not extend to antennas outside the fabric but instead route wires back into the fabric as shown in the following figure:
+  
+  .. figure:: figs/east_terminate.*
+    :alt: Basic tile illustration
+    :width: 100% 
+    :align: center
+
+  The figure illustrates how horizontal quad wires (that route 4 tiles far) are terminated at the east border of the fabric. The example follows the method used by Xilinx to terminate wires at the border of the chip.
+  FABulous can implement this scheme, but also any other, including some extra switching at the fabric borders and providing some primitives.
+  
+  The figure shows that each CLB tile has a pair of input and output ports for the two east and west directions while the east_terminate tile only has an east end port and a west begin port. Moreover, the figure shows the nested routig for long distance wires (see also the wires bullet below). It can be seen that the CLBs route through long distance wires (here quad wires) while the east_terminate tile  has all internal wires connected to the switch matrix. Note that this is only an abstract view and the wires that route through the CLBs may still be buffered inside the CLB tiles. However this is transparent from the user and not included in the architecture graph.
+  
+  The shown wires in the CLBs (from the last figure) are modeled as:
+
+  .. code-block:: python
+  
+     # this is for the CLBs in the example
+	 #direction  source_name  X-offset  Y-offset  destination_name  wires
+     EAST,       E4b,         4,        0,        E4e,              N    # N is used for illustration only
+     WEST,       W4b,         -4,       0,        W4e,              N    # N is used for illustration only 
+   
+  To control the different bahavior for tiles that do not extend a wire (as done in the terminate tiles), we use the ``NULL`` port name for wire begin or end ports that should not be generated on the tile:
+  
+  .. code-block:: python
+  
+     # this is for the east_terminate tile in the example
+     #direction  source_name  X-offset  Y-offset  destination_name  wires
+     EAST,       NULL,        4,        0,        E4e,              N    # N is used for illustration only 
+     WEST,       W4b,         -4,       0,        NULL,             N    # N is used for illustration only 
+ 
+  The ``NULL`` port entry for the EAST source_name and the WEST destination_name will prevent creating the corresponsing tile port names. Moreover the ``NULL`` port entries also will tell FABulous to connect *all* wires or the corresponding entry, including the nested ones, to the switch matrix. This allows the implementation of the shown U-turn routing scheme for termination but also any other more sophisticated termination scheme. 
+ 
+  For instance, in the FlexBex project, a FABulous eFPGA was coupled with the Ibex RISC V core for custum instruction set extensions (where the eFPGA fabric operates logically in parallel to the ALU) as shown in the following figure:
+  
+  .. figure:: figs/Ibex_eFPGA.*
+    :alt: Basic tile illustration
+    :width: 90% 
+    :align: center
+  
+  In this example, the CPU interface is located at the west border of the fabric. The fabric provides three slots, each being two CLB columns wide. The operands are routed into the fabric using double wires (so, each slot receives the operands at exactly the same position, which makes modules relocatable amonth the slots). The results are routed to the CPU using nested hex wires (again resulting in a homogeneous routing scheme that enables module relocation). The CPU has therefore access to the results of each slot and will multiplex results into the register file in case a custom instruction requires to do so. For simplicity, the figure is not showing the west termination tiles, which simply connect the internal routing wires to the top-level fabric wrapper that, in turn, is used to connect to the CPU.
+  In summery, the example shows how a termination tile can be used to provide more complex interface blocks and all this can be easily modeled and implemented with FABulous.
+  
+  .. note::  The ``destination_name`` is refering to the port name used at the destination tile. FABulous will throw an error if the destination tile does not provide that port name.
   
 * ``X-offset``, ``signed_int``
 
@@ -242,8 +290,10 @@ specifying:
     :align: center
 
   FABulous models wires strictly in horizontal or vertical direction but never directly in diagonal direction, as this reflects directly the tiled physical implementation of the fabric.
-  Therefore, in each wire specification, either ``X-offset`` is ``0`` or ``Y-offset`` is ``X-offset`` or both are ``0`` (in the case of a JUMP wire.
+  Therefore, in each wire specification, either ``X-offset`` is ``0`` or ``Y-offset`` is ``X-offset`` or both are ``0`` (in the case of a JUMP wire).
   
+  .. note::  The ``direction`` field and the sign of the ``X-offset`` and ``Y-offset`` values are redundant. FABulous uses internally the absulute ``X-offset`` and ``Y-offset`` values and only the ``direction`` field for specifying the direction of a wire. However, FABulous will throw a warning if there is a missmatch with the sign.
+
 * ``wires``, ``unsigned_int``
   Specifies the number of wires.
   
@@ -263,20 +313,34 @@ The following figure shows the corresponding wiring between the tiles.
 Note that a wire with a span greater 1 is usually nested.
 
 .. figure:: figs/wires_model.*
-  :alt: Basic tile illustration
+  :alt: Example of a 6 single East wires and 3 quad west wires
   :width: 40% 
   :align: center
 
 Each entry in the wire specification contributes with max(abs(``X-offset``),abs(``y-offset``)) x ``wires`` to the cut number.
-In this example, the east single wire (E1Beg) is contributing with 1 x 6 = 6 and the west quad wire (W4Beg) with 4 x 3 = 12wire segments to he cut. 
-Therefore, even we have only half the number of quad wires, these contribute double the single wires to the cut.
-Furthermore, the wires needed to write the configuration into the configuration memory cells are conributing substantially to the cut (see parameter ``FrameBitsPerRow`` in section :ref:`fabric_csv`).
+In this example, the east single wire (E1Beg) is contributing with 1 x 6 = 6 and the west quad wire (W4Beg) with 4 x 3 = 12 wire segments to he cut. 
+Therefore, even we have only half the number of quad wires, these contribute double the number of ASIC routing tracks to the cut.
+Furthermore, the wires needed to write the configuration into the configuration memory cells are further conributing substantially to the cut (see parameter ``FrameBitsPerRow`` in section :ref:`fabric_csv`).
 
-.. note::  A typical CLB requires about 100 to 200 wire connections between adjacent tiles. 
+The switch matrices see only the ``wires`` anount of wires, regardless of the span. However, the tile-to-tile interfaces include all nested wires concatenated together to a wide vector. FABulous connects the ``wires`` LSBs to the switch matrix inputs and the switch matrix otputs are conneted to the ``wires`` MSBs. Inside the tile, the wide vector is shifted by ``wires`` before routing it to the next tile, as shown in the following figure for an EAST hex-wire example:
 
- The shift register configuration mode needs less wire connections than frame-based configuration but shift register mode intends to have a slightly higher congestion inside the tiles because of the long chain.
+.. code-block:: python
+   :emphasize-lines: 1
 
-.. note::  Because long distance wires contribute overproportionally to the cut number it can be beneficial to segment long ditance wires to better balance the silicon core area to the available metal stack for implementing the routing.
+   TILE, CLB                  
+   #direction  source_name  X-offset  Y-offset  destination_name  wires
+   EAST,       E1B,         6,        0,        E1E,              2
+
+.. figure:: figs/wire_nesting_indexing.*
+  :alt: Wire nesting and wire indexing
+  :width: 100% 
+  :align: center
+
+.. note::  A typical CLB requires about 100 to 200 wire connections between adjacent tiles (about 400 to 800 wires in total per tile). 
+
+ The shift register configuration mode needs less wire connections than frame-based configuration at the tiole border but shift register mode intends to have a slightly higher congestion inside the tiles because of the long chain.
+
+.. note::  Because long distance wires contribute heavily to the cut number, it can be beneficial to segment long ditance wires to better balance between the silicon core area and the available metal stack for implementing the routing.
 
 .. _switch_matrix:
 
@@ -319,7 +383,7 @@ is equivalent to
    
 The example shows how port names can be composed from string segments that can alternatively be provided in list form. The lists will be recursevely unwrapped, which allows it to use multiple list operators together.
 
-An error message is generated if the number of composed ort names differs for the number of input_ports and output_ports or if ports are not found.
+An error message is generated if the number of composed port names differs for the number of input_ports and output_ports or if ports are not found.
 A warning will be generated if am already specified connection is tried to be set again.
 
 A switch matrix multiplexer is modeled by having multiple connections for the same <output_port>. For example, a MUX4 can be modeled as:
@@ -354,6 +418,12 @@ For the rows, this denotes the size of the multiplexers (e.g., MUX4) and by chec
 
 .. note::  Note that we can define the port names ``VCC`` and ``GND`` in :ref:`wires`, which allows it to specify a configurable multiplexer setting to ``1`` or ``0``. For instance, this is useful for BRAM pins where unused ports (e.g., some MSB address bits) have to be tied to ``0`` without the need of any further LUTs or routing.
 
+ .. code-block:: python
+
+   #direction  source_name  X-offset  Y-offset  destination_name  wires
+   JUMP,       NULL,        0,        0,        GND,              1
+   JUMP,       NULL,        0,        0,        VCC,              1
+
 .. note::  The multiplexers in the switch matrices are controled by configuration bits only. 
 
  The multiplexers in :ref:`primitives` can either be controlled by configuration bits (e.g., to select if a LUT output is to be routed to a primitive output pin or through a flop) or by the user logic (e.g., to cascade adjacent LUTs for implementing larger LUTs (like the F7MUX and F8MUX multiplexers in Xilinx FPGAs with LUT6).
@@ -371,20 +441,253 @@ For the rows, this denotes the size of the multiplexers (e.g., MUX4) and by chec
 Primitives
 ~~~~~~~~~~
 
+Primitives are used to manipulate, store and IO data. Examples for primitives include LUTs, slices (a cluster of LUTs that share a clock and that can be cascaded for arithmetic), flip flops, individual gates or multiplexers or complex blocks like DSPs, ALUs or BRAMs. A tile may have no ptimitves (e.g., the north and south terminate tiles in our example fabric) or as many as needed.
+
+Primitves are added with ``BEL`` statements (BEL stands for basic element and the phrase is adopted from Xilinx), as shown in the following tile definition fragment:
+
+.. code-block:: python
+   :emphasize-lines: 1,6,7,10
+
+   TILE, LUT4AB      # explained in subsection Tiles            
+   #direction  source_name  X-offset  Y-offset  destination_name  wires
+   NORTH,      N1BEG,       0,        1,        N1END,            4
+   ...
+   # bel keyword     RTL code         optional prefix
+   BEL,              LUT4.vhdl,       LA_    
+   BEL,              LUT4.vhdl,       LB_    
+   ...               
+   MATRIX,           LUT4AB_switch_matrix.vhdl               
+   EndTILE        
+
+FABulous simply adds primitves as RTL code blocks. This is a different philosophy than the usual VPR approach where primitives are generated by models. While the VPR path has advantages to drive an automated design space exploration, the FABulous way is more convinient when modeling an existing fabric. However, this requires some adaptations to the FPGA CAD tools as described in TODO. Complex blocks are usually not infered by VHDL or Verilog constructs but through direct primitive instantiations, which is common for all commercial FPGAs. Nevertheless, Yosys can implement arrays specified in RTL automatically to BRAMs and the Verilog multiply operator directly to our DSP blocks.
+
+The BEL statements in the previous example instantiates a LUT4 which has the following entity:
+
+.. code-block:: VHDL
+
+   entity LUT4 is
+    Generic ( NoConfigBits : integer := 18 );	-- has to be adjusted manually 
+    Port (      -- IMPORTANT: this has to be in a dedicated line
+	I0	: in	STD_LOGIC; -- LUT inputs
+	I1	: in	STD_LOGIC;
+	I2	: in	STD_LOGIC;
+	I3	: in	STD_LOGIC;
+	O	: out	STD_LOGIC; -- LUT output (combinatorial or FF)
+	Ci	: in	STD_LOGIC; -- carry chain input
+	Co	: out	STD_LOGIC; -- carry chain output
+	UserCLK : in	STD_LOGIC; -- EXTERNAL -- SHARED_PORT 
+	-- the # EXTERNAL keyword will send this sisgnal all the way to top and 
+	-- #SHARED allows multiple BELs using same port (exports 1 clock to top)
+	ConfigBits : in 	 STD_LOGIC_VECTOR( NoConfigBits -1 downto 0 )
+	);
+   end entity LUT4;
+
+FABulous defines the following coding rules for BELs:
+
+* Each primitive has to specify the number of configuration bits used in a generic/parameter called ``NoConfigBits``. This also holds if no configuration bits are used (NoConfigBits := 0).
+
+* The port declarations have to be formated to provide one declaration per line.
+
+* We use directives (provided as comments) to control the code generation semantics. The suported directives include: 
+
+  * ``EXTERNAL``: ports flagged with this directive are not connected to the switch matrix but are exported through the tile entitiy to the top-level fabric wrapper. The corresponding port will be exported with a tile prefix and, if provided in the BEL statement, the instance prefix. The following two blocks provide an OutBlock tile with two BEL statements and the corresponding Out_PAD module:
+
+    .. code-block:: python
+       :emphasize-lines: 1,4,5
+    
+       TILE, OutBlock      # explained in subsection Tiles            
+       ...
+       # bel keyword     RTL code         optional prefix
+       BEL,              tristate_pin.vhdl,       A_    
+       BEL,              tristate_pin.vhdl,       B_    
+
+    .. code-block:: VHDL
+    
+       entity Out_Pad is
+         Generic ( NoConfigBits : integer := 0 ); -- has to be adjusted manually 
+         Port (      -- IMPORTANT: this has to be in a dedicated line
+           I     : in    STD_LOGIC; -- LUT inputs
+           O_pin : out   STD_LOGIC; -- EXTERNAL 
+           );
+       end entity Out_Pad;
+  
+    In this example, the O_pin is flagged ``EXTERNAL`` and the port will therefore appear in the top fabric wrapper as:
+
+    .. code-block:: VHDL
+    
+       entity eFPGA is 
+         Generic (
+           MaxFramesPerCol : integer := 20;
+           FrameBitsPerRow : integer := 32;
+           NoConfigBits : integer := 0 );		   
+         Port (
+           -- for the first exported port:
+		   -- the tile prefix is "Tile_X0Y1", 
+		   -- the BEL instance prefix is "_A" and 
+		   -- the pin name is "O_pin"
+           Tile_X0Y1_A_O_pin  :  out STD_LOGIC; -- EXTERNAL 
+           Tile_X0Y1_B_O_pin  :  out STD_LOGIC; -- EXTERNAL  
+           Tile_X0Y2_A_O_pin  :  out STD_LOGIC; -- EXTERNAL 
+           Tile_X0Y2_B_O_pin  :  out STD_LOGIC; -- EXTERNAL  
+		   ...
+           );
+       end entity Out_Pad;
+	
+    TODO 
+  
+  * ``SHARED_PORT``: this directive can only be used together optionally with ``EXTERNAL``. Is a port is set ``EXTERNAL`` but not ``SHARED_PORT``, then , a TODO ( shared  ports flagged with this directive are not connected to the switch matrix but are exported through the tile entitiy to the top-level fabric wrapper.
+
+.. _bitstream:
+
+Bitstream remapping
+~~~~~~~~~~~~~~~~~~~
+
+
 
 .. _supertiles:
 
 Supertiles
 ----------
 
-and the corresponding spreadsheet specification from which FABulous can generate an eFPGA fabric.
+Supertiles are grouping together multiple basic :ref:`tiles`. Basic tiles are the smallest tile exposed to users providing a switch matrix, wires to the surrounding, and usually one or more primitives (like in a CLB tile). 
 
+Supertiles are needed for blocks that require more logic and/or more wires to the routing fabric (e.g., as needed for DSP blocks). Therefore, supertiles will normally provide as many switch matrices as they integrate basic tiles. 
+However, larger supertiles (e.g., hosting a CPU or similar) may only provide switch matrices in basic tiles located at the border of such a supertile
+In any case: supertiles must provide wire interfaces that match the surrounding when stitching them into a fabric.
 
+Modeling
+~~~~~~~~
 
-  -tile
-  -primitives
-  -routing fabric
-  -resource columns
-  -interfaces
-  -shape
+Supertiles are modeled from elementary tiles in a spreadsheet/csv file similar to how we model the whole FPGA fabric. Shapes can be defined arbitrary and NULL tiles can be used to skip fields. Examples:
 
+.. code-block:: python
+   :emphasize-lines: 1,5,7,11,13,17
+
+   SuperTILE, my_Z      # define supertile name            
+   myZ_00,  NULL
+   myZ_01,  myZ_11
+   NULL,    myZ_12
+   EndSuperTILE         # this is case insensitive
+
+   SuperTILE, my_I      # define supertile name            
+   my_top
+   my_mid
+   my_bot, 
+   EndSuperTILE         
+
+   SuperTILE, my_U      # define supertile name            
+   myU_00,  NULL,    myU_20 
+   myU_01,  NULL,    myU_21
+   myU_02,  myU_12,  myU_22
+   EndSuperTILE         
+
+.. figure:: figs/SuperTILE_examples.*
+  :alt: SuperTILE examples
+  :width: 80% 
+  :align: center
+
+Supertiles will be instantiated in the fabric (VHDL or Verilog) file, and supertiles themselves instantiate basic tiles (e.g., the ones shown in the figure). Therefore, supertiles define wires and switch matrices through their instantiated basic tiles. 
+
+If a basic tile has a border to the outside world (i.e. the surrounding fabric), the interface to that border is exported to the supertile interface (i.e. the Entity in VHDL). Those borders are marked blue in the figure above. Internal edges are connected inside the supertile wrapper according to the entire tile specification.
+
+A basic tile instantiated in a supertile may not implement interfaces to all NORTH, EAST, SOUTH, WEST directions. For instance, a supertile may include basics U-turn terminate tiles if the supertile is supposed to be placed at the border of the fabric.
+
+Tile ports that are declared ``EXTERNAL`` in the basic tiles will be exported all the way to the top-level the same way this is performed for :ref:`tiles`
+
+.. code-block:: VHDL
+   :emphasize-lines: 1
+
+   VHDL example:
+            RES0_O0    : out   STD_LOGIC; -- EXTERNAL   port will be exported to top-level wrapper
+            RES0_O1    : out   STD_LOGIC; -- EXTERNAL   port will be exported to top-level wrapper
+   Verilog example:
+
+Supertile Functionality
+~~~~~~~~~~~~~~~~~~~~~~~
+
+With the instantiation of multiple basic tiles, we define mostly the part related to the routing fabric. The actual functionality of a tile can be either concentrated in one basic tile or inside the supertile wrapper or as a combination of both. The following figure shows this for a simple DSP block example:
+
+.. figure:: figs/SuperTILE_functionality.*
+  :alt: Supertile Functionality through basic tiles of a dedicated module
+  :width: 90% 
+  :align: center
+ 
+The left example is concentrating the DSP functionality in the bottom tile and is modeled as shown in the next code block.
+(Note the two extra NORTH and SOUTH wires that provide the connections between the DSP BEL (located bot) and the top basic tile). 
+
+.. code-block:: python
+   :emphasize-lines: 1,5,9,13,15,19,23,28,30,33
+
+   TILE,       DSP_top             
+   #direction  source   X-offset  Y-offset destination wires
+   NORTH,      N1BEG,   0,        1,       N1END,      4
+   # connect prmitive outputs to routing fabric        
+   NORTH,      NULL,    0,        1,       bot2top,    10 # no route to north   
+   EAST,       E1BEG,   1,        0,       E1END,      4  
+   SOUTH,      S1BEG,   0,        -1,      S1END,      4  
+   # send data from routing fabric to primitive           
+   SOUTH,      top2bot, 0,        -1,      NULL,       18 # no route from north
+   WEST,       W1BEG,   -1,       0,       W1END,      4
+   JUMP,       J_BEG,   0,        0,       J_END,      8       
+   MATRIX,     DSP_top_switch_matrix.vhdl      
+   EndTILE                 
+                       
+   TILE,       DSP_bot             
+   #direction  source   X-offset  Y-offset destination wires
+   NORTH,      N1BEG,   0,        1,       N1END,      4
+   # connect prmitive outputs to routing fabric        
+   NORTH,      bot2top, 0,        1,       NULL,       10 # no route from south   
+   EAST,       E1BEG,   1,        0,       E1END,      4
+   SOUTH,      S1BEG,   0,        -1,      S1END,      4
+   # send data from routing fabric to primitive        
+   SOUTH,      NULL,    0,        -1,      top2bot,    18 # no route to south
+   WEST,       W1BEG,   -1,       0,       W1END,      4
+   JUMP,       J_BEG,   0,        0,       J_END,      8
+   BEL,        MULADD.vhdl                 # this is the actual functionality
+   MATRIX,     DSP_bot_switch_matrix.vhdl      
+   EndTILE                 
+                       
+   SuperTILE   DSP  # declace supertile  (Functionality concentrated in DSP_bot)   
+   DSP_top                 
+   DSP_bot                 
+   EndTILE                 
+
+The right example is providing the tile functionality in the supertile wrapper and is modeled as shown in the next code block.
+(Note the two wire entries with the LOCAL attribute in each basic tile to define that these wires are useable in the supertile wrapper. Furthermore configuration bits for the DSP primitive will be provided through a ConfigBits BEL. This allows it to distribute the number of configuration bits among the basic tiles as needed. Note that configuration bits are organized at basic tile level.)
+
+.. code-block:: python
+   :emphasize-lines: 1,8,9,12,14,21,22,25,27,30,31
+
+   TILE,       DSP_top             
+   #direction  source   X-offset  Y-offset destination wires
+   NORTH,      N1BEG,   0,        1,       N1END,      4
+   EAST,       E1BEG,   1,        0,       E1END,      4  
+   SOUTH,      S1BEG,   0,        -1,      S1END,      4  
+   WEST,       W1BEG,   -1,       0,       W1END,      4
+   JUMP,       J_BEG,   0,        0,       J_END,      8       
+   LOCAL,      NULL,    0,        0,       DSP2top,    10    
+   LOCAL,      top2DSP, 0,        0,       NULL,       18 
+   BEL,        ConfigBits.vhdl
+   MATRIX,     DSP_top_switch_matrix.vhdl      
+   EndTILE                 
+                       
+   TILE,       DSP_bot             
+   #direction  source   X-offset  Y-offset destination wires
+   NORTH,      N1BEG,   0,        1,       N1END,      4
+   EAST,       E1BEG,   1,        0,       E1END,      4  
+   SOUTH,      S1BEG,   0,        -1,      S1END,      4  
+   WEST,       W1BEG,   -1,       0,       W1END,      4
+   JUMP,       J_BEG,   0,        0,       J_END,      8       
+   LOCAL,      NULL,    0,        0,       DSP2bot,    10    
+   LOCAL,      bot2DSP, 0,        0,       NULL,       18 
+   BEL,        ConfigBits.vhdl
+   MATRIX,     DSP_top_switch_matrix.vhdl      
+   EndTILE                 
+                       
+   SuperTILE   DSP     # declace supetile DSP      
+   DSP_top                 
+   DSP_bot    
+   BEL,        MUlADD.vhdl   
+   EndTILE                 
+
+test
