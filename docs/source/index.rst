@@ -39,6 +39,7 @@ Contents
    :maxdepth: 2
 
    Usage
+   Building fabric
 
 
 .. toctree::
@@ -101,5 +102,5 @@ Contents
    :caption: Team and contact
    
    contact
-
+   publications
 

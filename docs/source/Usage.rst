@@ -1,5 +1,5 @@
-Usage
-=====
+Quick start
+===========
 .. _setup:
 
 Prerequisites
@@ -41,8 +41,6 @@ The following packages need to be installed for CAD toolchain
 
 Building Fabric
 ---------------
-
-Under 
 
 .. code-block:: console
 
