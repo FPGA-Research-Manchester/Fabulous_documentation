@@ -39,6 +39,7 @@ Contents
    :maxdepth: 2
 
    Usage
+   Building fabric
 
 
 .. toctree::

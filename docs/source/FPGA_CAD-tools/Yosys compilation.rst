@@ -1,3 +1,5 @@
+.. _yosys:
+
 Yosys compilation
 =================
 
