@@ -18,7 +18,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.graphviz',
+    'sphinxcontrib.bibtex',
 ]
 
 intersphinx_mapping = {
@@ -38,3 +38,5 @@ html_logo = 'figs/FAB_logo.png'
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
+
+bibtex_bibfiles = ['publications.bib']

@@ -101,5 +101,5 @@ Contents
    :caption: Team and contact
    
    contact
-
+   publications
 
