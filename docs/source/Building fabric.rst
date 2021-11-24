@@ -3,6 +3,9 @@ Building fabric
 
 The user can run the flow step by step as well (see below for instructions on building HDLs):
 
+.. image:: https://www.dropbox.com/s/frnugxm1kjvv947/FABulous_flow2.png?raw=1
+        :width: 80%
+
 #. Generate the switch matrix as an empty CSV file containing the adjacency matrix
 
    .. code-block:: console
@@ -60,15 +63,19 @@ The user can run the flow step by step as well (see below for instructions on bu
         python3 fabric_gen_v3.py -GenFabricHDL
         python3 fabric_gen_v3.py -GenFabricVerilog
 
-#. generate the nextpnr model files under ``npnroutput/``.
+#. Generate the nextpnr model files under ``npnroutput/``.
 
    .. code-block:: console
 
         python3 fabric_gen_v3.py -GenNextpnrModel
-        python3 fabric_gen_v3.py -GenBitstreamSpec npnroutput/meta_data_v3.txt
 
 #. Generate the VPR model files under ``vproutput/``.
 
    .. code-block:: console
 
         python3 fabric_gen_v3.py -GenVPRModel
+
+#. Generate the meta data list for FASM --> Bitstream
+
+   .. code-block:: console
+        python3 fabric_gen_v3.py -GenBitstreamSpec npnroutput/meta_data_v3.txt

@@ -17,7 +17,17 @@ A pre-defined Yosys TCL script is under ``$FAB_ROOT/nextpnr/fabulous_v3/synth/sy
 
 .. code-block:: console
 
-	yosys -p "tcl <path/to/TCL/File>/synth_fabulous_dffesr.tcl <K-LUT> <benchmark_top_module> <output>.json" <benchmark_netlist>.v
+	yosys -p "tcl <path/to/TCL/File>/synth_fabulous_dffesr.tcl <K-LUT> <top_module> <JSON_file>" <benchmark_netlist>
+
++---------------------+-------------------------------------------------------------------+
+| <K-LUT>             | Number of LUT inputs, 4 is for LUT4                               |
++---------------------+-------------------------------------------------------------------+
+| <top_module>        | The name of top module in the benchmark                           |
++---------------------+-------------------------------------------------------------------+
+| <JSON_file>         | User can define the name of output JSON file with ``.json`` format|
++---------------------+-------------------------------------------------------------------+
+| <benchmark_netlist> | Benchmark RTL netlist in verilog format                           |
++---------------------+-------------------------------------------------------------------+
 
 * For any clocked benchmark, a clock tile blackbox module must be instantiated in the top module for clock generation.
 

@@ -24,7 +24,11 @@ To generate the FASM file by nextpnr, go into ``$FAB_ROOT/nextpnr/fabulous_v3/fa
 
 .. code-block:: console
 
-        nextpnr-fabulous --pre-pack fab_arch.py --pre-place fab_timing.py --json <benchmark>.json --router router2 --post-route bitstream.py
+        nextpnr-fabulous --pre-pack fab_arch.py --pre-place fab_timing.py --json <JSON_file> --router router2 --post-route bitstream.py
+
++------------------+------------------------------------------------+
+| <JSON_file>      | the JSON file generated from Yosys compilation |
++------------------+------------------------------------------------+
 
 Example,
 
