@@ -31,7 +31,6 @@ Contents
 
 .. toctree::
    :maxdepth: 1 
-   :caption: Background and Features
 
    background
 
@@ -44,25 +43,21 @@ Contents
 
 .. toctree::
    :maxdepth: 1 
-   :caption: Fabric definition
 
    fabric_definition
 
 .. toctree::
    :maxdepth: 2 
-   :caption: Fabric ASIC implementation
 
    ASIC/index
 
 .. toctree::
    :maxdepth: 2 
-   :caption: FPGA CAD-tool parameterization
 
    FPGA_CAD-tools/index
 
 .. toctree::
    :maxdepth: 2 
-   :caption: FPGA-to-bitstream compilation
 
    FPGA-to-bitstream/index
 
@@ -72,7 +67,6 @@ Contents
 
 .. toctree::
    :maxdepth: 1 
-   :caption: Simulation and emulation
 
    simulation/index
 
@@ -81,25 +75,21 @@ Contents
    
 .. toctree::
    :maxdepth: 2 
-   :caption: Technical references
 
    references/index
 
 .. toctree::
    :maxdepth: 1 
-   :caption: Chip gallery
 
    gallery/index
    
 .. toctree::
    :maxdepth: 1 
-   :caption: Definitions and abbreviations
 
    definitions
    
 .. toctree::
    :maxdepth: 1 
-   :caption: Team and contact
    
    contact
    publications
