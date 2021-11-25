@@ -1,50 +1,12 @@
-Nextpnr compilation
-===================
-
-Compile JSON to FASM by nextpnr <-- bels.txt + pips.txt
-
-Nextpnr-fabulous is using nextpnr python API for architecture generation, then pack, place and route.
-
-Building
---------
-
-.. code-block:: console
-
-   cd $FAB_ROOT/nextpnr
-   cmake . -DARCH=fabulous_v3
-   make -j$(nproc)
-   sudo make install
-
-.. note:: Any new version architecture should be declared in ``$FAB_ROOT/nextpnr/CMakeLists.txt``
-
-User guide
-----------
-
-To generate the FASM file by nextpnr, go into ``$FAB_ROOT/nextpnr/fabulous_v3/fab_arch``,
-
-.. code-block:: console
-
-        nextpnr-fabulous --pre-pack fab_arch.py --pre-place fab_timing.py --json <JSON_file> --router router2 --post-route bitstream.py
-
-+------------------+------------------------------------------------+
-| <JSON_file>      | the JSON file generated from Yosys compilation |
-+------------------+------------------------------------------------+
-
-Example,
-
-.. code-block:: console
-        
-        nextpnr-fabulous --pre-pack fab_arch.py --pre-place fab_timing.py --json 16bit-sequential.json --router router2 --post-route bitstream.py
-
-Nextpnr models description
---------------------------
+Nextpnr models
+==============
 
 After fabulous flow running correctly, ``bel.txt`` and ``pips.txt`` are copied to ``$FAB_ROOT/nextpnr/fabulous_v3/fab_arch``.
 
 * ``bel.txt`` is the primitive description file in order of tiles
 
 .. code-block:: none
- :emphasize-lines: 7
+    :emphasize-lines: 7
 
         #Tile_X0Y1
         X0Y1,X0,Y1,A,IO_1_bidirectional_frame_config_pass,A_I,A_T,A_O,A_Q
@@ -71,7 +33,7 @@ After fabulous flow running correctly, ``bel.txt`` and ``pips.txt`` are copied t
 * ``pips.txt`` is the routing resource description.
 
 .. code-block:: none
- :emphasize-lines: 1
+    :emphasize-lines: 1
         
         X1Y1,N1BEG0,X1Y0,N1END0,8,N1BEG0.N1END0
         X1Y1,N1BEG1,X1Y0,N1END1,8,N1BEG1.N1END1
@@ -102,16 +64,3 @@ Constraints for your architecture can be put in place using Absolute Placement C
         (* BEL="X7Y3.C" *) FABULOUS_LC #(.INIT(16'b1010101010101010), .DFF_ENABLE(1'b0)) constraint_test (.CLK(clk), .I0(enable), .O (enable_i));
 
 We can constrain which BEL to be used in the routing resource, LUT "C" is constrained to be used in Tile X7Y3 as shown in the example. With the same constrain method, we can also declare ``InPass4_frame_config, OutPass4_frame_config and IO_1_bidirectional_frame_config_pass`` for IO constrains.       
-
-
-Primitive instantiation
------------------------
-
-As described in more detail in the yosys documentation, the (*keep*) attribute can be used to instantiate a component and clarify that yosys should not try to optimise it away. This is done in the format
-
-.. code-block:: none
-
-        (* keep *) COMPONENT_TYPE #(PARAMETER = VALUE)  COMPONENT_NAME(.PORT_NAME1(WIRE_NAME1), .PORT_NAME2(WIRE_NAME2), ...);
-
-
-
