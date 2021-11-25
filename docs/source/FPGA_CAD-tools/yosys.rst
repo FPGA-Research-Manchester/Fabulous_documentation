@@ -69,13 +69,15 @@ We have made a comparation synthesis between with and without *ENABLE* and *SET/
 | Murax_dffesr| 128 | 380 | 637 | 785 | 1930     | 233  | 841    | 86      | 7       | 174      | 20       | 12          |
 +-------------+-----+-----+-----+-----+----------+------+--------+---------+---------+----------+----------+-------------+
 
-Ps. 
-LUTFF    : DFF with no enable and no set/reset
-LUTFF_E  : synchronous enable
-LUTFF_SR : synchronous reset to 0
-LUTFF_SS : synchronous set to 1
-LUTFF_ESR: synchronous enable, synchronous reset to 0
-LUTFF_ESS: synchronous enable, synchronous set to 1
+.. code-block:: none
+
+        Ps. 
+        LUTFF    : DFF with no enable and no set/reset
+        LUTFF_E  : synchronous enable
+        LUTFF_SR : synchronous reset to 0
+        LUTFF_SS : synchronous set to 1
+        LUTFF_ESR: synchronous enable, synchronous reset to 0
+        LUTFF_ESS: synchronous enable, synchronous set to 1
 
 Around 30% LUT resources can be saved by *ENABLE* and *SET/RESET* functions added, so we decide to support it in the version 3.
 
