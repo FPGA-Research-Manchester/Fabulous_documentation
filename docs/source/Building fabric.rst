@@ -3,8 +3,9 @@ Building fabric
 
 The user can run the flow step by step as well (see below for instructions on building HDLs):
 
-.. image:: https://www.dropbox.com/s/frnugxm1kjvv947/FABulous_flow2.png?raw=1
+.. figure:: figs/FABulous_flow2.*
         :width: 80%
+        :align: center
 
 #. Generate the switch matrix as an empty CSV file containing the adjacency matrix
 

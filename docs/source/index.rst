@@ -9,15 +9,16 @@ toolchain release packages, deals with the bitstream generation and after fabric
 
 This guide describes everything you need to set up your system to develop for FABulous ecosystem.
 
-.. figure:: figs/workflows.svg
+.. figure:: figs/workflows.*
     :alt: Fabulous workflows and dependencies
     :width: 80%
     :align: center
     
     Fabulous workflows and dependencies.
 
-.. image:: https://www.dropbox.com/s/g6wrtom681nr7tb/fabulous_ecosystem.png?raw=1
+.. figure:: figs/fabulous_ecosystem.*
     :width: 80%
+    :align: center
 
 Check out the :doc:`Usage` section for further information, including
 how to :ref:`setup`.
@@ -66,7 +67,7 @@ Contents
 ..		Bitstream assembly
 
 .. toctree::
-   :maxdepth: 1 
+   :maxdepth: 2
 
    simulation/index
 
