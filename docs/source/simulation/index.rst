@@ -7,3 +7,4 @@ Simulation and emulation
    :maxdepth: 2
 
    simulation
+   emulation
