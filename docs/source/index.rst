@@ -39,11 +39,15 @@ Contents
    :maxdepth: 2
 
    Usage
+
+.. toctree::
+   :maxdepth: 2
+
    Building fabric
 
 
 .. toctree::
-   :maxdepth: 1 
+   :maxdepth: 2
 
    fabric_definition
 
